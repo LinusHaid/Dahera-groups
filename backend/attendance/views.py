@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from django.utils import timezone
 from django.http import HttpResponse
-from datetime import datetime
+from datetime import datetime, time
 
 from .models import Attendance
 from .serializers import AttendanceSerializer
@@ -66,11 +66,27 @@ class CheckOutView(APIView):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
-        attendance.check_out = timezone.now()
+        now_local = timezone.localtime(timezone.now())
+        if now_local.hour >= 20:
+            auto_checkout_dt = datetime.combine(
+                now_local.date(),
+                time(20, 0, 0),
+                tzinfo=now_local.tzinfo
+            )
+            if auto_checkout_dt <= attendance.check_in:
+                auto_checkout_dt = attendance.check_in + timezone.timedelta(minutes=1)
+            attendance.check_out = auto_checkout_dt
+            if not attendance.notes:
+                attendance.notes = "Auto checked-out at 8:00 PM shift cutoff."
+            msg = 'Shift cutoff reached at 8:00 PM. Checked out at 8:00 PM.'
+        else:
+            attendance.check_out = timezone.now()
+            msg = 'Check-out successful!'
+
         attendance.save()
 
         return Response(
-            {'message': 'Check-out successful!', 'data': AttendanceSerializer(attendance).data},
+            {'message': msg, 'data': AttendanceSerializer(attendance).data},
             status=status.HTTP_200_OK
         )
 
@@ -78,6 +94,7 @@ class TodayAttendanceView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
+        Attendance.auto_checkout_unclosed_records()
         today = timezone.now().date()
         attendance = Attendance.objects.filter(employee=request.user, date=today).first()
         if not attendance:
@@ -89,6 +106,7 @@ class AttendanceViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated, IsSelfOrAdmin]
 
     def get_queryset(self):
+        Attendance.auto_checkout_unclosed_records()
         user = self.request.user
         qs = Attendance.objects.all().select_related('employee').order_by('-date', '-check_in') if user.is_admin_role else Attendance.objects.filter(employee=user).order_by('-date')
         

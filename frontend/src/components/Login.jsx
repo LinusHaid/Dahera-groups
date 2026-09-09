@@ -93,9 +93,11 @@ export const Login = ({ isModal = false, onClose, onLoginSuccess }) => {
         <div className="p-8 md:p-10 bg-gradient-to-br from-[#4C0519] via-[#881337] to-[#991B1B] text-white flex flex-col justify-between">
           <div>
             <div className="flex items-center gap-3.5 mb-8">
-              <div className="p-3 bg-white/10 backdrop-blur rounded-2xl text-white shadow-lg border border-white/20">
-                <Building2 className="w-8 h-8" />
-              </div>
+              <img
+                src="/logo.jpg"
+                alt="Thahira Groups Logo"
+                className="w-12 h-12 rounded-2xl object-cover shadow-lg border border-white/20"
+              />
               <div>
                 <h1 className="text-2xl font-black tracking-tight">Thahira Groups</h1>
                 <span className="text-[11px] font-semibold text-rose-200 tracking-wider uppercase">Employee Portal</span>

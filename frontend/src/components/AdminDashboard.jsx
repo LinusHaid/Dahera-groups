@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { Users, CalendarDays, Receipt, UserPlus, CheckCircle, XCircle, Clock, Search, ShieldCheck, IndianRupee, Download, UserX, UserCheck, Calculator, Filter, FileText } from 'lucide-react';
+import { Users, CalendarDays, Receipt, UserPlus, CheckCircle, XCircle, Clock, Search, ShieldCheck, IndianRupee, Download, UserX, UserCheck, Calculator, Filter, FileText, Database } from 'lucide-react';
 
 export const AdminDashboard = ({ subTab = 'admin-dashboard', darkMode = false }) => {
   const [employees, setEmployees] = useState([]);
@@ -11,6 +11,7 @@ export const AdminDashboard = ({ subTab = 'admin-dashboard', darkMode = false })
   const [searchTerm, setSearchTerm] = useState('');
   const [downloadingId, setDownloadingId] = useState(null);
   const [downloadingAttPdf, setDownloadingAttPdf] = useState(false);
+  const [downloadingBackup, setDownloadingBackup] = useState(false);
 
   const [attFilters, setAttFilters] = useState({
     start_date: new Date(new Date().setDate(new Date().getDate() - 30)).toISOString().split('T')[0],
@@ -281,6 +282,28 @@ export const AdminDashboard = ({ subTab = 'admin-dashboard', darkMode = false })
       alert("Failed to download attendance PDF report.");
     } finally {
       setDownloadingAttPdf(false);
+    }
+  };
+
+  const handleDownloadDbBackup = async () => {
+    setDownloadingBackup(true);
+    try {
+      const response = await api.get('/users/employees/backup-db/', {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `Thahira_ERP_Database_Backup_${new Date().toISOString().slice(0, 10)}.sqlite3`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+    } catch (err) {
+      console.error("Database backup download error:", err);
+      alert(err.response?.data?.detail || "Failed to download database backup.");
+    } finally {
+      setDownloadingBackup(false);
     }
   };
 

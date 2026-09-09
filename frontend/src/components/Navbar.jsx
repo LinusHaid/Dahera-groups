@@ -114,9 +114,11 @@ export const Navbar = ({ onMobileMenuToggle, onSelectTab, darkMode, setDarkMode 
           </button>
           
           <div className="flex items-center gap-2 sm:gap-3 cursor-pointer">
-            <div className="p-1.5 sm:p-2 bg-[#881337] text-white rounded-xl sm:rounded-full shadow-md shrink-0">
-              <Building2 className="w-4 h-4" />
-            </div>
+            <img
+              src="/logo.jpg"
+              alt="Thahira Groups Logo"
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover shadow-md shrink-0 border border-stone-200"
+            />
             <div>
               <span className={`font-black text-xs sm:text-sm tracking-tight block leading-tight ${darkMode ? 'text-white' : 'text-stone-900'}`}>
                 Thahira Groups

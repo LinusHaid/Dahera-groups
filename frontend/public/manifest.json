@@ -1,0 +1,16 @@
+{
+  "short_name": "Thahira",
+  "name": "Thahira Groups - ERP System",
+  "icons": [
+    {
+      "src": "/logo.jpg",
+      "type": "image/jpeg",
+      "sizes": "192x192 512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#FAF9F6",
+  "theme_color": "#881337",
+  "display": "standalone",
+  "orientation": "portrait"
+}

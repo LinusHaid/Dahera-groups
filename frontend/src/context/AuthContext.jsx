@@ -49,6 +49,23 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []);
 
+  useEffect(() => {
+    const checkShiftAutoLogout = () => {
+      if (user && user.role === 'EMPLOYEE') {
+        const now = new Date();
+        const currentHour = now.getHours();
+        if (currentHour >= 20) {
+          logout();
+          alert("Automatic Logout: Your shift closed at 8:00 PM. Please log in tomorrow.");
+        }
+      }
+    };
+
+    checkShiftAutoLogout();
+    const interval = setInterval(checkShiftAutoLogout, 30000);
+    return () => clearInterval(interval);
+  }, [user]);
+
   const logout = () => {
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');

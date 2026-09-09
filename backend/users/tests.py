@@ -79,4 +79,19 @@ class NotificationReadTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertTrue(self.notification.read_by.filter(id=self.user.id).exists())
 
+    def test_backup_db_endpoint(self):
+        from rest_framework.test import APIClient
+        admin_user = User.objects.create_user(
+            username='admin_test@thahira.com',
+            email='admin_test@thahira.com',
+            password='Password123',
+            role=User.Role.ADMIN
+        )
+        client = APIClient()
+        client.force_authenticate(user=admin_user)
+        
+        response = client.get('/api/users/employees/backup-db/')
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/x-sqlite3')
+
 

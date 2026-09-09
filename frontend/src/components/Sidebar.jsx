@@ -76,7 +76,8 @@ export const Sidebar = ({ activeTab, setActiveTab, mobileOpen, setMobileOpen, da
         </nav>
       </div>
 
-      <div className={`px-5 pt-4 border-t text-xs ${darkMode ? 'border-stone-800 text-stone-500' : 'border-stone-100 text-stone-400'}`}>
+      <div className={`px-5 pt-4 border-t text-xs flex items-center gap-2.5 ${darkMode ? 'border-stone-800 text-stone-500' : 'border-stone-100 text-stone-400'}`}>
+        <img src="/logo.jpg" alt="Logo" className="w-6 h-6 rounded-full object-cover shadow-xs border border-stone-200" />
         <p className={`font-bold ${darkMode ? 'text-stone-300' : 'text-stone-800'}`}>Thahira Groups</p>
       </div>
     </div>

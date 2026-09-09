@@ -147,6 +147,13 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
                 'detail': 'Account is terminated. Please contact admin.'
             })
 
+        from django.utils import timezone
+        now_local = timezone.localtime(timezone.now())
+        if self.user.role == 'EMPLOYEE' and now_local.hour >= 20:
+            raise serializers.ValidationError({
+                'detail': 'Employee portal is closed after 8:00 PM shift cutoff. Please log in tomorrow during shift hours.'
+            })
+
         data['user'] = UserSerializer(self.user).data
         return data
 

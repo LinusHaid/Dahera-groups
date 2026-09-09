@@ -68,5 +68,40 @@ class Attendance(models.Model):
         else:
             self.status = self.Status.ON_TIME
 
+    @classmethod
+    def auto_checkout_unclosed_records(cls):
+        """
+        Auto checks-out unclosed records (check_in set, check_out null)
+        when local time reaches or passes 8:00 PM (20:00 IST) on that shift day,
+        or for any past dates.
+        """
+        now_local = timezone.localtime(timezone.now())
+        today_local = now_local.date()
+        current_hour = now_local.hour
+
+        unclosed = cls.objects.filter(check_in__isnull=False, check_out__isnull=True)
+        updated_count = 0
+
+        for att in unclosed:
+            att_local_checkin = timezone.localtime(att.check_in)
+            att_date = att_local_checkin.date()
+
+            if att_date < today_local or (att_date == today_local and current_hour >= 20):
+                auto_checkout_dt = datetime.combine(
+                    att_date,
+                    time(20, 0, 0),
+                    tzinfo=now_local.tzinfo
+                )
+                if auto_checkout_dt <= att.check_in:
+                    auto_checkout_dt = att.check_in + timezone.timedelta(minutes=1)
+
+                att.check_out = auto_checkout_dt
+                if not att.notes:
+                    att.notes = "Auto checked-out at 8:00 PM shift cutoff."
+                att.save()
+                updated_count += 1
+
+        return updated_count
+
     def __str__(self):
         return f"{self.employee.get_full_name()} - {self.date} ({self.status})"

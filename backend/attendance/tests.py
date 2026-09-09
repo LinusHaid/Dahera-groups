@@ -60,3 +60,25 @@ class AttendanceLateStatusTestCase(TestCase):
             check_in=dt_late
         )
         self.assertEqual(att.status, Attendance.Status.LATE)
+
+    def test_auto_checkout_unclosed_records(self):
+        tz = zoneinfo.ZoneInfo('Asia/Kolkata')
+        past_checkin = datetime(2026, 9, 1, 9, 30, 0, tzinfo=tz)
+        
+        att = Attendance.objects.create(
+            employee=self.female_user,
+            date=past_checkin.date(),
+            check_in=past_checkin
+        )
+        self.assertIsNone(att.check_out)
+
+        count = Attendance.auto_checkout_unclosed_records()
+        self.assertGreaterEqual(count, 1)
+
+        att.refresh_from_db()
+        self.assertIsNotNone(att.check_out)
+        local_checkout = timezone.localtime(att.check_out)
+        self.assertEqual(local_checkout.hour, 20)
+        self.assertEqual(local_checkout.minute, 0)
+        self.assertGreater(att.working_hours, 0.0)
+
