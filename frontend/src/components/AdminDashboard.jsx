@@ -232,14 +232,19 @@ export const AdminDashboard = ({ subTab = 'admin-dashboard', darkMode = false })
       }
 
       const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `Salary_Slip_${employeeId || 'EMP'}_${monthName}_${year}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+      const filename = `Salary_Slip_${employeeId || 'EMP'}_${monthName}_${year}.pdf`;
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64Url = reader.result;
+        const link = document.createElement('a');
+        link.href = base64Url;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => link.remove(), 500);
+      };
+      reader.readAsDataURL(blob);
     } catch (err) {
       alert("Failed to download PDF.");
     } finally {
@@ -269,14 +274,19 @@ export const AdminDashboard = ({ subTab = 'admin-dashboard', darkMode = false })
       }
 
       const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `Thahira_Attendance_Report_${attFilters.start_date}_to_${attFilters.end_date}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+      const filename = `Thahira_Attendance_Report_${attFilters.start_date || 'All'}_to_${attFilters.end_date || 'Today'}.pdf`;
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64Url = reader.result;
+        const link = document.createElement('a');
+        link.href = base64Url;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => link.remove(), 500);
+      };
+      reader.readAsDataURL(blob);
     } catch (err) {
       console.error("Attendance PDF error:", err);
       alert("Failed to download attendance PDF report.");
@@ -612,8 +622,8 @@ export const AdminDashboard = ({ subTab = 'admin-dashboard', darkMode = false })
                       <tr key={log.id} className="hover:bg-stone-50/80 transition-colors">
                         <td className="py-3.5 px-4 font-semibold">{log.date}</td>
                         <td className="py-3.5 px-4 font-bold">
-                          {log.employee_name}
-                          <span className="block text-[11px] font-mono text-rose-800">{log.employee_id}</span>
+                          {log.employee_name || log.employee_details?.full_name || log.employee_details?.username || 'Staff'}
+                          <span className="block text-[11px] font-mono text-rose-800">{log.employee_id || log.employee_details?.employee_id || 'N/A'}</span>
                         </td>
                         <td className="py-3.5 px-4 text-rose-900 font-medium">{log.expected_login_time}</td>
                         <td className="py-3.5 px-4 font-mono">
@@ -624,9 +634,10 @@ export const AdminDashboard = ({ subTab = 'admin-dashboard', darkMode = false })
                         </td>
                         <td className="py-3.5 px-4">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            log.status === 'HALF_DAY' || log.status === 'HALF DAY' ? 'bg-amber-100 text-amber-900 border border-amber-300' :
                             log.status === 'LATE' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
                           }`}>
-                            {log.status}
+                            {log.status === 'HALF_DAY' ? 'HALF DAY' : log.status}
                           </span>
                         </td>
                         <td className="py-3.5 px-4 text-right font-medium">{log.working_hours} hrs</td>

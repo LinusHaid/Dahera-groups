@@ -7,6 +7,7 @@ class Attendance(models.Model):
     class Status(models.TextChoices):
         ON_TIME = 'ON_TIME', 'On Time'
         LATE = 'LATE', 'Late'
+        HALF_DAY = 'HALF_DAY', 'Half Day'
         ABSENT = 'ABSENT', 'Absent'
         COMPLETED = 'COMPLETED', 'Completed'
 
@@ -28,6 +29,11 @@ class Attendance(models.Model):
         blank=True,
         help_text="Expected login time based on gender schedule (10:00 AM Male / 09:30 AM Female)"
     )
+    shift_start = models.TimeField(null=True, blank=True)
+    shift_end = models.TimeField(null=True, blank=True)
+    late_hours = models.IntegerField(default=0)
+    late_minutes = models.IntegerField(default=0)
+    late_deduction = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     working_hours = models.FloatField(default=0.0)
     notes = models.TextField(blank=True, null=True)
 
@@ -39,34 +45,20 @@ class Attendance(models.Model):
         if not self.expected_login_time and self.employee:
             self.expected_login_time = self.employee.get_scheduled_login_time()
 
-        if self.check_in and (not self.status or self.status in [self.Status.ON_TIME, self.Status.LATE]):
+        if self.check_in and (not self.status or self.status in [self.Status.ON_TIME, self.Status.LATE, self.Status.HALF_DAY]):
             self.evaluate_late_status()
-
 
         if self.check_in and self.check_out:
             delta = self.check_out - self.check_in
             self.working_hours = round(delta.total_seconds() / 3600.0, 2)
-            if self.status != self.Status.LATE:
+            if self.status not in [self.Status.LATE, self.Status.HALF_DAY]:
                 self.status = self.Status.COMPLETED
 
         super().save(*args, **kwargs)
 
     def evaluate_late_status(self):
-       
-        if not self.check_in or not self.employee:
-            return
-        
-        local_check_in = timezone.localtime(self.check_in)
-        check_in_time = local_check_in.time()
-        scheduled_time = self.employee.get_scheduled_login_time_obj()
-
-        cutoff_seconds = (scheduled_time.hour * 3600) + (scheduled_time.minute * 60) + 300
-        actual_seconds = (check_in_time.hour * 3600) + (check_in_time.minute * 60) + check_in_time.second
-
-        if actual_seconds > cutoff_seconds:
-            self.status = self.Status.LATE
-        else:
-            self.status = self.Status.ON_TIME
+        from .services import evaluate_attendance_record
+        evaluate_attendance_record(self)
 
     @classmethod
     def auto_checkout_unclosed_records(cls):

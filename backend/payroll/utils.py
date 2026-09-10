@@ -103,11 +103,15 @@ def generate_salary_slip_pdf(salary_slip) -> bytes:
     elements.append(info_table)
     elements.append(Spacer(1, 12))
 
-    elements.append(Paragraph("Calendar Month & Rate Breakdown", section_heading))
+    elements.append(Paragraph("Calendar Month & Attendance Breakdown", section_heading))
     cal_data = [
         [
-            Paragraph("<b>Month Calendar Days:</b>", cell_bold), Paragraph(f"{salary_slip.days_in_month} Days", cell_normal),
+            Paragraph("<b>Working Days:</b>", cell_bold), Paragraph(f"{salary_slip.working_days} Days", cell_normal),
             Paragraph("<b>Per-Day Salary Rate:</b>", cell_bold), Paragraph(f"<b>₹{salary_slip.daily_rate:,.2f} / day</b>", cell_normal)
+        ],
+        [
+            Paragraph("<b>Present Days / Absences:</b>", cell_bold), Paragraph(f"{salary_slip.present_days} Present / {salary_slip.absent_days} Absent", cell_normal),
+            Paragraph("<b>Late Arrivals / Half-Days:</b>", cell_bold), Paragraph(f"{salary_slip.late_days} Late ({salary_slip.half_days or 0} Half-Day, {salary_slip.total_late_hours}h {salary_slip.total_late_minutes}m)", cell_normal)
         ],
         [
             Paragraph("<b>Unpaid Leave Days:</b>", cell_bold), Paragraph(f"{salary_slip.leave_days_deducted} Days", cell_normal),
@@ -127,18 +131,21 @@ def generate_salary_slip_pdf(salary_slip) -> bytes:
 
     elements.append(Paragraph("Earnings & Deductions Summary", section_heading))
     
+    total_deductions_val = (salary_slip.leave_deduction_amount or 0) + (salary_slip.late_salary_deduction or 0) + (salary_slip.deductions or 0)
+
     table_data = [
         [
             Paragraph("<b>Earnings Description</b>", cell_bold), Paragraph("<b>Amount (₹)</b>", cell_bold),
             Paragraph("<b>Deductions Description</b>", cell_bold), Paragraph("<b>Amount (₹)</b>", cell_bold)
         ],
         [Paragraph("Base Monthly Basic Salary", cell_normal), Paragraph(f"₹{salary_slip.basic_salary:,.2f}", cell_normal), Paragraph("Leave Absence Deduction", cell_normal), Paragraph(f"-₹{salary_slip.leave_deduction_amount:,.2f}", cell_normal)],
-        [Paragraph("HRA & Allowances", cell_normal), Paragraph(f"₹{salary_slip.allowances:,.2f}", cell_normal), Paragraph("PF / Tax Deductions", cell_normal), Paragraph(f"-₹{salary_slip.deductions:,.2f}", cell_normal)],
+        [Paragraph("HRA & Allowances", cell_normal), Paragraph(f"₹{salary_slip.allowances:,.2f}", cell_normal), Paragraph("Attendance Late Deduction", cell_normal), Paragraph(f"-₹{salary_slip.late_salary_deduction:,.2f}", cell_normal)],
+        [Paragraph("Other Earnings", cell_normal), Paragraph("₹0.00", cell_normal), Paragraph("PF / Tax / Other Deductions", cell_normal), Paragraph(f"-₹{salary_slip.deductions:,.2f}", cell_normal)],
         [
             Paragraph("<b>Total Gross Earnings</b>", cell_bold),
             Paragraph(f"<b>₹{(salary_slip.basic_salary + salary_slip.allowances):,.2f}</b>", cell_bold),
             Paragraph("<b>Total Deductions</b>", cell_bold),
-            Paragraph(f"<b>₹{(salary_slip.leave_deduction_amount + salary_slip.deductions):,.2f}</b>", cell_bold)
+            Paragraph(f"<b>₹{total_deductions_val:,.2f}</b>", cell_bold)
         ]
     ]
 

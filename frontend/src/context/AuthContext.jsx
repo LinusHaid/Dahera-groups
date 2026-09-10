@@ -4,15 +4,16 @@ import api from '../services/api';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => {
-    const savedUser = localStorage.getItem('user');
-    return savedUser ? JSON.parse(savedUser) : null;
-  });
+  // Always start with user = null so the Login page renders first
+  const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const login = async (username, password) => {
     const res = await api.post('/users/login/', { username, password });
     const { access, refresh, user: userData } = res.data;
+    sessionStorage.setItem('access_token', access);
+    sessionStorage.setItem('refresh_token', refresh);
+    sessionStorage.setItem('user', JSON.stringify(userData));
     localStorage.setItem('access_token', access);
     localStorage.setItem('refresh_token', refresh);
     localStorage.setItem('user', JSON.stringify(userData));
@@ -21,32 +22,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('access_token');
-      if (token) {
-        try {
-          const res = await api.get('/users/profile/');
-          setUser(res.data);
-          localStorage.setItem('user', JSON.stringify(res.data));
-        } catch (err) {
-          // Auto login as thahira_admin if token is invalid
-          try {
-            await login('thahira_admin', 'admin@123');
-          } catch (loginErr) {
-            console.error("Auto admin login failed:", loginErr);
-          }
-        }
-      } else {
-        // Auto login as thahira_admin so admin requires no login
-        try {
-          await login('thahira_admin', 'admin@123');
-        } catch (adminErr) {
-          console.error("Auto admin login error:", adminErr);
-        }
-      }
-      setLoading(false);
-    };
-    checkAuth();
+    // Require manual credential entry on app launch/start
+    logout();
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -67,6 +45,7 @@ export const AuthProvider = ({ children }) => {
   }, [user]);
 
   const logout = () => {
+    sessionStorage.clear();
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user');
@@ -76,6 +55,7 @@ export const AuthProvider = ({ children }) => {
   const updateProfile = async (data) => {
     const res = await api.patch('/users/profile/', data);
     setUser(res.data);
+    sessionStorage.setItem('user', JSON.stringify(res.data));
     localStorage.setItem('user', JSON.stringify(res.data));
     return res.data;
   };

@@ -9,6 +9,7 @@ urlpatterns = [
     path('api/attendance/', include('attendance.urls')),
     path('api/leaves/', include('leaves.urls')),
     path('api/payroll/', include('payroll.urls')),
+    
 ]
 
 if settings.DEBUG:

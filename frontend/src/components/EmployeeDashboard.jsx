@@ -137,14 +137,19 @@ export const EmployeeDashboard = ({ subTab = 'dashboard', darkMode = false }) =>
       }
 
       const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `Salary_Slip_${employeeId || 'EMP'}_${monthName}_${year}.pdf`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      setTimeout(() => window.URL.revokeObjectURL(url), 1000);
+      const filename = `Salary_Slip_${employeeId || 'EMP'}_${monthName}_${year}.pdf`;
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64Url = reader.result;
+        const link = document.createElement('a');
+        link.href = base64Url;
+        link.setAttribute('download', filename);
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => link.remove(), 500);
+      };
+      reader.readAsDataURL(blob);
     } catch (err) {
       alert("Failed to download PDF.");
     } finally {
@@ -386,9 +391,10 @@ export const EmployeeDashboard = ({ subTab = 'dashboard', darkMode = false }) =>
                         </td>
                         <td className="py-3 px-3">
                           <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                            log.status === 'HALF_DAY' || log.status === 'HALF DAY' ? 'bg-amber-100 text-amber-900 border border-amber-300' :
                             log.status === 'LATE' ? 'bg-amber-100 text-amber-800' : 'bg-emerald-100 text-emerald-800'
                           }`}>
-                            {log.status}
+                            {log.status === 'HALF_DAY' ? 'HALF DAY' : log.status}
                           </span>
                         </td>
                         <td className="py-3 px-3 font-medium">{log.working_hours} hrs</td>
@@ -558,17 +564,27 @@ export const EmployeeDashboard = ({ subTab = 'dashboard', darkMode = false }) =>
 
                   <div className="p-3 bg-rose-50/70 border border-rose-200 rounded-xl text-xs space-y-1">
                     <div className="flex justify-between items-center text-[11px]">
-                      <span className="text-stone-600 font-medium">Month Days:</span>
-                      <strong className="text-stone-900">{slip.days_in_month || 30} Days</strong>
+                      <span className="text-stone-600 font-medium">Working Days:</span>
+                      <strong className="text-stone-900">
+                        {slip.working_days || 26} Days ({slip.late_days || 0} Late{slip.half_days ? `, ${slip.half_days} Half-Day` : ''})
+                      </strong>
                     </div>
                     <div className="flex justify-between items-center text-[11px]">
                       <span className="text-stone-600 font-medium">Daily Salary Rate:</span>
                       <strong className="text-stone-900">₹{parseFloat(slip.daily_rate || 0).toLocaleString('en-IN')}/day</strong>
                     </div>
-                    <div className="flex justify-between items-center text-[11px]">
-                      <span className="text-rose-900 font-bold">Leave Days Deducted ({slip.leave_days_deducted || 0} days):</span>
-                      <strong className="text-rose-900 font-black">-₹{parseFloat(slip.leave_deduction_amount || 0).toLocaleString('en-IN')}</strong>
-                    </div>
+                    {parseFloat(slip.late_salary_deduction || 0) > 0 && (
+                      <div className="flex justify-between items-center text-[11px]">
+                        <span className="text-rose-900 font-bold">Late Salary Deduction ({slip.total_late_hours || 0}h {slip.total_late_minutes || 0}m late):</span>
+                        <strong className="text-rose-900 font-black">-₹{parseFloat(slip.late_salary_deduction || 0).toLocaleString('en-IN')}</strong>
+                      </div>
+                    )}
+                    {parseFloat(slip.leave_deduction_amount || 0) > 0 && (
+                      <div className="flex justify-between items-center text-[11px]">
+                        <span className="text-rose-900 font-bold">Leave Days Deducted ({slip.leave_days_deducted || 0} days):</span>
+                        <strong className="text-rose-900 font-black">-₹{parseFloat(slip.leave_deduction_amount || 0).toLocaleString('en-IN')}</strong>
+                      </div>
+                    )}
                   </div>
 
                   <div className={`grid grid-cols-3 gap-2 p-3 rounded-xl border text-xs ${cardBg}`}>

@@ -39,6 +39,10 @@ class SalarySlipViewSet(viewsets.ModelViewSet):
         month = serializer.validated_data.get('month')
         year = serializer.validated_data.get('year')
         basic_salary = serializer.validated_data.get('basic_salary')
+        
+        if emp and (not basic_salary or float(basic_salary) == 0):
+            basic_salary = emp.base_salary or 50000.00
+
         allowances = serializer.validated_data.get('allowances', 0) or 0
         deductions = serializer.validated_data.get('deductions', 0) or 0
         leave_days_deducted = serializer.validated_data.get('leave_days_deducted', 0) or 0
@@ -55,6 +59,9 @@ class SalarySlipViewSet(viewsets.ModelViewSet):
                 'status': 'PAID'
             }
         )
+        # Re-trigger calculation to ensure late attendance and leave deductions auto-populate
+        slip.calculate_salary_details()
+        slip.save()
 
         try:
             Notification.objects.create(

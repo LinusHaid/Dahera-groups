@@ -26,16 +26,29 @@ class User(AbstractUser):
     date_of_joining = models.DateField(null=True, blank=True)
     bio = models.TextField(blank=True, default='')
     base_salary = models.DecimalField(max_digits=12, decimal_places=2, default=50000.00)
+    shift_start_time = models.TimeField(null=True, blank=True, help_text="Custom shift start time")
+    shift_end_time = models.TimeField(null=True, blank=True, help_text="Custom shift end time")
 
-    def get_scheduled_login_time(self) -> str:
-        if self.gender == self.Gender.FEMALE:
-            return "09:30 AM"
-        return "10:00 AM"
-
-    def get_scheduled_login_time_obj(self) -> time:
+    def get_shift_start_time(self) -> time:
+        if self.shift_start_time:
+            return self.shift_start_time
         if self.gender == self.Gender.FEMALE:
             return time(9, 30, 0)
         return time(10, 0, 0)
+
+    def get_shift_end_time(self) -> time:
+        if self.shift_end_time:
+            return self.shift_end_time
+        if self.gender == self.Gender.FEMALE:
+            return time(17, 30, 0)
+        return time(18, 0, 0)
+
+    def get_scheduled_login_time(self) -> str:
+        st = self.get_shift_start_time()
+        return st.strftime("%I:%M %p")
+
+    def get_scheduled_login_time_obj(self) -> time:
+        return self.get_shift_start_time()
 
     @property
     def is_admin_role(self) -> bool:
