@@ -38,10 +38,10 @@ class Command(BaseCommand):
             is_superuser=True
         )
         
-        admin_user.set_password('admin@123')
+        admin_user.set_password('Admin@2026')
         admin_user.save()
 
         # Clean out any old non-admin users
         User.objects.filter(role='EMPLOYEE').delete()
 
-        self.stdout.write(self.style.SUCCESS("Thahira Groups Admin account thahira_admin set up successfully with password: admin@123!"))
+        self.stdout.write(self.style.SUCCESS("Thahira Groups Admin account thahira_admin set up successfully with password: Admin@2026!"))

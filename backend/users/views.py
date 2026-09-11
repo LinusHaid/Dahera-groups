@@ -34,7 +34,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         if user.is_admin_role:
-            return User.objects.all().order_by('-date_joined')
+            return User.objects.filter(role=User.Role.EMPLOYEE).order_by('-date_joined')
         return User.objects.filter(id=user.id)
 
     def get_serializer_class(self):

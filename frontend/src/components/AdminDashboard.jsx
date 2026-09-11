@@ -99,7 +99,8 @@ export const AdminDashboard = ({ subTab = 'admin-dashboard', darkMode = false })
         api.get(`/attendance/logs/?${queryParams}`)
       ]);
 
-      setEmployees(empRes.data.results || empRes.data || []);
+      const fetchedEmps = empRes.data.results || empRes.data || [];
+      setEmployees(fetchedEmps.filter(e => e.role === 'EMPLOYEE'));
       setLeaves(leaveRes.data.results || leaveRes.data || []);
       setSlips(slipRes.data.results || slipRes.data || []);
       setAttendanceLogs(attRes.data.results || attRes.data || []);
@@ -363,9 +364,11 @@ export const AdminDashboard = ({ subTab = 'admin-dashboard', darkMode = false })
   const absentCountToday = todayEmployeeAttendance.filter(a => a.status === 'ABSENT').length;
 
   const filteredEmployees = employees.filter(e => 
-    (e.full_name || e.username).toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (e.employee_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (e.department || '').toLowerCase().includes(searchTerm.toLowerCase())
+    e.role === 'EMPLOYEE' && (
+      (e.full_name || e.username).toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (e.employee_id || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (e.department || '').toLowerCase().includes(searchTerm.toLowerCase())
+    )
   );
 
   const calcBase = parseFloat(slipForm.basic_salary || 0);
