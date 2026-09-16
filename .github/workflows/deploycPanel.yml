@@ -1,0 +1,22 @@
+name: Build All Modules
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # Group your sub-services/modules here
+        module: [app1, app2, app3, ... ]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy Module to cPanel
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          local-dir: ./${{ matrix.module }}/
+          server-dir: /public_html/${{ matrix.module }}/
